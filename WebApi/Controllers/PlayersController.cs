@@ -24,29 +24,29 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetPlayersForCommand(Guid commandId)
+        public async Task<IActionResult> GetPlayersForCommand(Guid commandId)
         {
-            var command = _repository.Command.GetCommand(commandId, trackChanges: false);
+            var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
             if (command == null)
             {
                 _logger.LogInfo($"Command with id: {commandId} doesn't exist in the  database.");
                 return NotFound();
             }
-            var playersFromDb = _repository.Player.GetPlayers(commandId, trackChanges: false);
+            var playersFromDb = await _repository.Player.GetPlayersAsync(commandId, trackChanges: false);
             var playersDto = _mapper.Map<IEnumerable<PlayerDto>>(playersFromDb);
             return Ok(playersDto);
         }
 
         [HttpGet("{id}", Name = "GetPlayerForCommand")]
-        public IActionResult GetPlayerForCommand(Guid commandId, Guid id)
+        public async Task<IActionResult> GetPlayerForCommand(Guid commandId, Guid id)
         {
-            var command = _repository.Command.GetCommand(commandId, trackChanges: false);
+            var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
             if (command == null)
             {
                 _logger.LogInfo($"Command with id: {commandId} doesn't exist in the database.");
                 return NotFound();
             }
-            var playerDb = _repository.Player.GetPlayer(commandId, id, trackChanges: false);
+            var playerDb = await _repository.Player.GetPlayerAsync(commandId, id, trackChanges: false);
             if (playerDb == null)
             {
                 _logger.LogInfo($"Employee with id: {id} doesn't exist in the database.");
@@ -57,14 +57,19 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreatePlayerForCompany(Guid commandId, [FromBody] PlayerForCreationDto player)
+        public async Task<IActionResult> CreatePlayerForCommand(Guid commandId, [FromBody] PlayerForCreationDto player)
         {
             if (player == null)
             {
                 _logger.LogError("PlayerForCreationDto object sent from client is null.");
                 return BadRequest("PlayerForCreationDto object is null");
             }
-            var command = _repository.Command.GetCommand(commandId, trackChanges: false);
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("Invalid model state for the EmployeeForCreationDto object");
+                return UnprocessableEntity(ModelState);
+            }
+            var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
             if (command == null)
             {
                 _logger.LogInfo($"Command with id: {commandId} doesn't exist in the database.");
@@ -72,7 +77,7 @@ namespace WebApi.Controllers
             }
             var playerEntity = _mapper.Map<Player>(player);
             _repository.Player.CreatePlayerForCommand(commandId, playerEntity);
-            _repository.Save();
+            await _repository.SaveAsync();
             var playerToReturn = _mapper.Map<PlayerDto>(playerEntity);
             return CreatedAtRoute("GetPlayerForCommand", new
             {
@@ -82,65 +87,70 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeletePlayerForCommand(Guid commandId, Guid id)
+        public async Task<IActionResult> DeletePlayerForCommand(Guid commandId, Guid id)
         {
-            var command = _repository.Command.GetCommand(commandId, trackChanges: false);
+            var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
             if (command == null)
             {
                 _logger.LogInfo($"Command with id: {commandId} doesn't exist in the database.");
                 return NotFound();
             }
-            var playerForCommand = _repository.Player.GetPlayer(commandId, id, trackChanges: false);
+            var playerForCommand = await _repository.Player.GetPlayerAsync(commandId, id, trackChanges: false);
             if (playerForCommand == null)
             {
                 _logger.LogInfo($"Command with id: {id} doesn't exist in the database.");
                 return NotFound();
             }
             _repository.Player.DeletePlayer(playerForCommand);
-            _repository.Save();
+            await _repository.SaveAsync();
             return NoContent();
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdatePlayerForCommand(Guid commandId, Guid id, [FromBody] PlayerForUpdateDto player)
+        public async Task<IActionResult> UpdatePlayerForCommand(Guid commandId, Guid id, [FromBody] PlayerForUpdateDto player)
         {
             if (player == null)
             {
                 _logger.LogError("PlayerForUpdateDto object sent from client is null.");
                 return BadRequest("PlayerForUpdateDto object is null");
             }
-            var command = _repository.Command.GetCommand(commandId, trackChanges: false);
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("Invalid model state for the EmployeeForUpdateDto object");
+                return UnprocessableEntity(ModelState);
+            }
+            var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
             if (command == null)
             {
                 _logger.LogInfo($"Command with id: {commandId} doesn't exist in the database.");
                 return NotFound();
             }
-            var playerEntity = _repository.Player.GetPlayer(commandId, id, trackChanges: true);
+            var playerEntity = await _repository.Player.GetPlayerAsync(commandId, id, trackChanges: true);
             if (playerEntity == null)
             {
                 _logger.LogInfo($"Player with id: {id} doesn't exist in the database.");
                 return NotFound();
             }
             _mapper.Map(player, playerEntity);
-            _repository.Save();
+            await _repository.SaveAsync();
             return NoContent();
         }
 
         [HttpPatch("{id}")]
-        public IActionResult PartiallyUpdatePlayerForCommand(Guid commandId, Guid id, [FromBody] JsonPatchDocument<PlayerForUpdateDto> patchDoc)
+        public async Task<IActionResult> PartiallyUpdatePlayerForCommand(Guid commandId, Guid id, [FromBody] JsonPatchDocument<PlayerForUpdateDto> patchDoc)
         {
             if (patchDoc == null)
             {
                 _logger.LogError("patchDoc object sent from client is null.");
                 return BadRequest("patchDoc object is null");
             }
-            var command = _repository.Command.GetCommand(commandId, trackChanges: false);
+            var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
             if (command == null)
             {
                 _logger.LogInfo($"Command with id: {commandId} doesn't exist in the database.");
                 return NotFound();
             }
-            var playerEntity = _repository.Player.GetPlayer(commandId, id, trackChanges: true);
+            var playerEntity = await _repository.Player.GetPlayerAsync(commandId, id, trackChanges: true);
             if (playerEntity == null)
             {
                 _logger.LogInfo($"Player with id: {id} doesn't exist in the database.");
@@ -148,8 +158,14 @@ namespace WebApi.Controllers
             }
             var playerToPatch = _mapper.Map<PlayerForUpdateDto>(playerEntity);
             patchDoc.ApplyTo(playerToPatch);
+            TryValidateModel(playerToPatch);
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("Invalid model state for the patch document");
+                return UnprocessableEntity(ModelState);
+            }
             _mapper.Map(playerToPatch, playerEntity);
-            _repository.Save();
+            await _repository.SaveAsync();
             return NoContent();
         }
     }

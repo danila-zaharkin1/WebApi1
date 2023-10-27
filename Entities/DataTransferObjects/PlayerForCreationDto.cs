@@ -1,9 +1,9 @@
-﻿namespace Entities.DataTransferObjects
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Entities.DataTransferObjects
 {
-    public class PlayerForCreationDto
+    public class PlayerForCreationDto: PlayerForManipulationDto
     {
-        public string Name { get; set; }
-        public int Age { get; set; }
-        public string Position { get; set; }
+        
     }
 }

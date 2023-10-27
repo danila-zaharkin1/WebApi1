@@ -24,17 +24,17 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetCommands()
+        public async Task<IActionResult> GetCommands()
         {
-            var commands = _repository.Command.GetAllCommands(trackChanges: false);
+            var commands = await _repository.Command.GetAllCommandsAsync(trackChanges: false);
             var commandsDto = _mapper.Map<IEnumerable<CommandDto>>(commands);
             return Ok(commandsDto);
         }
 
         [HttpGet("{id}", Name = "CommandById")]
-        public IActionResult GetCommand(Guid id)
+        public async Task<IActionResult> GetCommand(Guid id)
         {
-            var command = _repository.Command.GetCommand(id, trackChanges: false);
+            var command = await _repository.Command.GetCommandAsync(id, trackChanges: false);
             if (command == null)
             {
                 _logger.LogInfo($"Command with id: {id} doesn't exist in the database.");
@@ -48,30 +48,35 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateCompany([FromBody] CommandForCreationDto command)
+        public async Task<IActionResult> CreateCompany([FromBody] CommandForCreationDto command)
         {
             if (command == null)
             {
                 _logger.LogError("CommandForCreationDto object sent from client is null.");
                 return BadRequest("CommandForCreationDto object is null");
             }
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("Invalid model state for the EmployeeForCreationDto object");
+                return UnprocessableEntity(ModelState);
+            }
             var commandEntity = _mapper.Map<Command>(command);
             _repository.Command.CreateCommand(commandEntity);
-            _repository.Save();
+            await _repository.SaveAsync();
             var commandToReturn = _mapper.Map<CommandDto>(commandEntity);
             return CreatedAtRoute("CommandById", new { id = commandToReturn.Id },
             commandToReturn);
         }
 
         [HttpGet("collection/({ids})", Name = "CommandCollection")]
-        public IActionResult GetCommandCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> ids)
+        public async Task<IActionResult> GetCommandCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> ids)
         {
             if (ids == null)
             {
                 _logger.LogError("Parameter ids is null");
                 return BadRequest("Parameter ids is null");
             }
-            var commandEntities = _repository.Command.GetByIds(ids, trackChanges: false);
+            var commandEntities = await _repository.Command.GetByIdsAsync(ids, trackChanges: false);
             if (ids.Count() != commandEntities.Count())
             {
                 _logger.LogError("Some ids are not valid in a collection");
@@ -82,7 +87,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("collection")]
-        public IActionResult CreateCommandCollection([FromBody] IEnumerable<CommandForCreationDto> commmandCollection)
+        public async Task<IActionResult> CreateCommandCollection([FromBody] IEnumerable<CommandForCreationDto> commmandCollection)
         {
             if (commmandCollection == null)
             {
@@ -94,7 +99,7 @@ namespace WebApi.Controllers
             {
                 _repository.Command.CreateCommand(command);
             }
-            _repository.Save();
+            await _repository.SaveAsync();
             var commandCollectionToReturn = _mapper.Map<IEnumerable<CommandDto>>(commandEntities);
             var ids = string.Join(",", commandCollectionToReturn.Select(c => c.Id));
             return CreatedAtRoute("CommandCollection", new { ids },
@@ -102,35 +107,35 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteCommand(Guid id)
+        public async Task<IActionResult> DeleteCommand(Guid id)
         {
-            var command = _repository.Command.GetCommand(id, trackChanges: false);
+            var command = await _repository.Command.GetCommandAsync(id, trackChanges: false);
             if (command == null)
             {
                 _logger.LogInfo($"Company with id: {id} doesn't exist in the database.");
                 return NotFound();
             }
             _repository.Command.DeleteCommand(command);
-            _repository.Save();
+            await _repository.SaveAsync();
             return NoContent();
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateCommand(Guid id, [FromBody] CommandForUpdateDto command)
+        public async Task<IActionResult> UpdateCommand(Guid id, [FromBody] CommandForUpdateDto command)
         {
             if (command == null)
             {
                 _logger.LogError("CommandForUpdateDto object sent from client is null.");
                 return BadRequest("CommandForUpdateDto object is null");
             }
-            var commandEntity = _repository.Command.GetCommand(id, trackChanges: true);
+            var commandEntity = await _repository.Command.GetCommandAsync(id, trackChanges: true);
             if (commandEntity == null)
             {
                 _logger.LogInfo($"Command with id: {id} doesn't exist in the database.");
                 return NotFound();
             }
             _mapper.Map(command, commandEntity);
-            _repository.Save();
+            await _repository.SaveAsync();
             return NoContent();
         }
     }
