@@ -6,5 +6,7 @@ namespace Contracts
     {
         void Delete1(Company company);
         public IEnumerable<Company> GetAllCompanies(bool trackChanges);
+        Company GetCompany(Guid companyId, bool trackChanges);
+
     }
 }

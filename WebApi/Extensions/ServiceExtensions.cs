@@ -3,6 +3,7 @@ using Entities;
 using LoggerService;
 using Microsoft.EntityFrameworkCore;
 using Repository;
+using WebApi.OutputFormatters;
 
 namespace WebApi.Extensions
 {
@@ -25,5 +26,6 @@ namespace WebApi.Extensions
             services.AddDbContext<RepositoryContext>(opts => opts.UseSqlServer(configuration.GetConnectionString("sqlConnection"), b =>
             b.MigrationsAssembly("WebApi")));
         public static void ConfigureRepositoryManager(this IServiceCollection services) =>  services.AddScoped<IRepositoryManager, RepositoryManager>();
+        public static IMvcBuilder AddCustomCSVFormatter(this IMvcBuilder builder) => builder.AddMvcOptions(config => config.OutputFormatters.Add(new CsvOutputFormatter()));
     }
 }

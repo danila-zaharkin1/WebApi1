@@ -10,5 +10,8 @@ namespace Repository
         : base(repositoryContext)
         {
         }
+
+        public IEnumerable<Command> GetAllCommands(bool trackChanges) => FindAll(trackChanges).OrderBy(c => c.Name).ToList();
+        public Command GetCommand(Guid commandId, bool trackChanges) => FindByCondition(c => c.Id.Equals(commandId), trackChanges).SingleOrDefault();
     }
 }
