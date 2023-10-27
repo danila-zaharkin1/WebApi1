@@ -14,5 +14,10 @@ namespace Repository
         public IEnumerable<Player> GetPlayers(Guid commandId, bool trackChanges) => FindByCondition(e => e.CommandId.Equals(commandId), trackChanges).OrderBy(e => e.Name);
         public Player GetPlayer(Guid commandId, Guid id, bool trackChanges) => FindByCondition(e => e.CommandId.Equals(commandId) &&
                 e.Id.Equals(id),trackChanges).SingleOrDefault();
+        public void CreatePlayerForCommand(Guid commandId, Player player)
+        {
+            player.CommandId = commandId;
+            Create(player);
+        }
     }
 }

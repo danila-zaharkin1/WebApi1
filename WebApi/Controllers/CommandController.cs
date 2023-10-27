@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Contracts;
 using Entities.DataTransferObjects;
+using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using WebApi.ModelBinders;
 
 namespace WebApi.Controllers
 {
@@ -43,6 +45,60 @@ namespace WebApi.Controllers
                 var commandDto = _mapper.Map<CommandDto>(command);
                 return Ok(commandDto);
             }
+        }
+
+        [HttpPost]
+        public IActionResult CreateCompany([FromBody] CommandForCreationDto command)
+        {
+            if (command == null)
+            {
+                _logger.LogError("CommandForCreationDto object sent from client is null.");
+                return BadRequest("CommandForCreationDto object is null");
+            }
+            var commandEntity = _mapper.Map<Command>(command);
+            _repository.Command.CreateCommand(commandEntity);
+            _repository.Save();
+            var commandToReturn = _mapper.Map<CommandDto>(commandEntity);
+            return CreatedAtRoute("CommandById", new { id = commandToReturn.Id },
+            commandToReturn);
+        }
+
+        [HttpGet("collection/({ids})", Name = "CommandCollection")]
+        public IActionResult GetCommandCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> ids)
+        {
+            if (ids == null)
+            {
+                _logger.LogError("Parameter ids is null");
+                return BadRequest("Parameter ids is null");
+            }
+            var commandEntities = _repository.Command.GetByIds(ids, trackChanges: false);
+            if (ids.Count() != commandEntities.Count())
+            {
+                _logger.LogError("Some ids are not valid in a collection");
+                return NotFound();
+            }
+            var commandsToReturn = _mapper.Map<IEnumerable<CommandDto>>(commandEntities);
+            return Ok(commandsToReturn);
+        }
+
+        [HttpPost("collection")]
+        public IActionResult CreateCommandCollection([FromBody] IEnumerable<CommandForCreationDto> commmandCollection)
+        {
+            if (commmandCollection == null)
+            {
+                _logger.LogError("Command collection sent from client is null.");
+                return BadRequest("Command collection is null");
+            }
+            var commandEntities = _mapper.Map<IEnumerable<Command>>(commmandCollection);
+            foreach (var command in commandEntities)
+            {
+                _repository.Command.CreateCommand(command);
+            }
+            _repository.Save();
+            var commandCollectionToReturn = _mapper.Map<IEnumerable<CommandDto>>(commandEntities);
+            var ids = string.Join(",", commandCollectionToReturn.Select(c => c.Id));
+            return CreatedAtRoute("CommandCollection", new { ids },
+            commandCollectionToReturn);
         }
     }
 }

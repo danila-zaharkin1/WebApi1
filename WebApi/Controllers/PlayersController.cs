@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Contracts;
 using Entities.DataTransferObjects;
+using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -35,7 +36,7 @@ namespace WebApi.Controllers
             return Ok(playersDto);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetPlayerForCommand")]
         public IActionResult GetPlayerForCommand(Guid commandId, Guid id)
         {
             var command = _repository.Command.GetCommand(commandId, trackChanges: false);
@@ -52,6 +53,31 @@ namespace WebApi.Controllers
             }
             var player = _mapper.Map<PlayerDto>(playerDb);
             return Ok(player);
+        }
+
+        [HttpPost]
+        public IActionResult CreatePlayerForCompany(Guid commandId, [FromBody] PlayerForCreationDto player)
+        {
+            if (player == null)
+            {
+                _logger.LogError("PlayerForCreationDto object sent from client is null.");
+                return BadRequest("PlayerForCreationDto object is null");
+            }
+            var command = _repository.Command.GetCommand(commandId, trackChanges: false);
+            if (command == null)
+            {
+                _logger.LogInfo($"Command with id: {commandId} doesn't exist in the database.");
+                return NotFound();
+            }
+            var playerEntity = _mapper.Map<Player>(player);
+            _repository.Player.CreatePlayerForCommand(commandId, playerEntity);
+            _repository.Save();
+            var playerToReturn = _mapper.Map<PlayerDto>(playerEntity);
+            return CreatedAtRoute("GetPlayerForCommand", new
+            {
+                commandId,
+                id = playerToReturn.Id
+            }, playerToReturn);
         }
     }
 }
