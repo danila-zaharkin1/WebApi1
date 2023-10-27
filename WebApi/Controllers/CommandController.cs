@@ -100,5 +100,38 @@ namespace WebApi.Controllers
             return CreatedAtRoute("CommandCollection", new { ids },
             commandCollectionToReturn);
         }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteCommand(Guid id)
+        {
+            var command = _repository.Command.GetCommand(id, trackChanges: false);
+            if (command == null)
+            {
+                _logger.LogInfo($"Company with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+            _repository.Command.DeleteCommand(command);
+            _repository.Save();
+            return NoContent();
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateCommand(Guid id, [FromBody] CommandForUpdateDto command)
+        {
+            if (command == null)
+            {
+                _logger.LogError("CommandForUpdateDto object sent from client is null.");
+                return BadRequest("CommandForUpdateDto object is null");
+            }
+            var commandEntity = _repository.Command.GetCommand(id, trackChanges: true);
+            if (commandEntity == null)
+            {
+                _logger.LogInfo($"Command with id: {id} doesn't exist in the database.");
+                return NotFound();
+            }
+            _mapper.Map(command, commandEntity);
+            _repository.Save();
+            return NoContent();
+        }
     }
 }

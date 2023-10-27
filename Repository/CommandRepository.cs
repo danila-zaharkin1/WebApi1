@@ -15,7 +15,7 @@ namespace Repository
         public Command GetCommand(Guid commandId, bool trackChanges) => FindByCondition(c => c.Id.Equals(commandId), trackChanges).SingleOrDefault();
         public void CreateCommand(Command command) => Create(command);
         public IEnumerable<Command> GetByIds(IEnumerable<Guid> ids, bool trackChanges) => FindByCondition(x => ids.Contains(x.Id), trackChanges).ToList();
-
+        public void DeleteCommand(Command command) => Delete(command);
 
     }
 }

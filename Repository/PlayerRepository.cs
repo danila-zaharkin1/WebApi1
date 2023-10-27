@@ -19,5 +19,6 @@ namespace Repository
             player.CommandId = commandId;
             Create(player);
         }
+        public void DeletePlayer(Player player) => Delete(player);
     }
 }

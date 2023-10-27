@@ -16,6 +16,13 @@ namespace WebApi
             CreateMap<CommandForCreationDto, Command>();
             CreateMap<EmployeeForCreationDto, Employee>();
             CreateMap<PlayerForCreationDto, Player>();
+            CreateMap<EmployeeForUpdateDto, Employee>();
+            CreateMap<PlayerForUpdateDto, Player>();    
+            CreateMap<CommandForUpdateDto, Command>();
+            CreateMap<CompanyForUpdateDto, Company>();
+            CreateMap<EmployeeForUpdateDto, Employee>().ReverseMap();
+            CreateMap<PlayerForUpdateDto, Player>().ReverseMap();
+
         }
     }
 }
