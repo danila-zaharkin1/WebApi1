@@ -4,6 +4,7 @@ using Entities.DataTransferObjects;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using WebApi.ActionFilters;
 using WebApi.ModelBinders;
 
 namespace WebApi.Controllers
@@ -48,18 +49,9 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> CreateCompany([FromBody] CommandForCreationDto command)
-        {
-            if (command == null)
-            {
-                _logger.LogError("CommandForCreationDto object sent from client is null.");
-                return BadRequest("CommandForCreationDto object is null");
-            }
-            if (!ModelState.IsValid)
-            {
-                _logger.LogError("Invalid model state for the EmployeeForCreationDto object");
-                return UnprocessableEntity(ModelState);
-            }
+        {         
             var commandEntity = _mapper.Map<Command>(command);
             _repository.Command.CreateCommand(commandEntity);
             await _repository.SaveAsync();
@@ -121,13 +113,9 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> UpdateCommand(Guid id, [FromBody] CommandForUpdateDto command)
-        {
-            if (command == null)
-            {
-                _logger.LogError("CommandForUpdateDto object sent from client is null.");
-                return BadRequest("CommandForUpdateDto object is null");
-            }
+        {          
             var commandEntity = await _repository.Command.GetCommandAsync(id, trackChanges: true);
             if (commandEntity == null)
             {

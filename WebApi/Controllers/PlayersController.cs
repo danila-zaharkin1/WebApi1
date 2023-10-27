@@ -2,9 +2,12 @@
 using Contracts;
 using Entities.DataTransferObjects;
 using Entities.Models;
+using Entities.RequestFeatures;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using WebApi.ActionFilters;
 
 namespace WebApi.Controllers
 {
@@ -24,15 +27,18 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetPlayersForCommand(Guid commandId)
+        public async Task<IActionResult> GetPlayersForCommand(Guid commandId, [FromQuery] PlayerParameters playerParameters)
         {
+            if (!playerParameters.ValidAgeRange)
+                return BadRequest("Max age can't be less than min age.");
             var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
             if (command == null)
             {
                 _logger.LogInfo($"Command with id: {commandId} doesn't exist in the  database.");
                 return NotFound();
             }
-            var playersFromDb = await _repository.Player.GetPlayersAsync(commandId, trackChanges: false);
+            var playersFromDb = await _repository.Player.GetPlayersAsync(commandId, playerParameters, trackChanges: false);
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(playersFromDb.MetaData));
             var playersDto = _mapper.Map<IEnumerable<PlayerDto>>(playersFromDb);
             return Ok(playersDto);
         }
@@ -87,15 +93,10 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [ServiceFilter(typeof(ValidatePlayerForCommandExistsAttribute))]
         public async Task<IActionResult> DeletePlayerForCommand(Guid commandId, Guid id)
         {
-            var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
-            if (command == null)
-            {
-                _logger.LogInfo($"Command with id: {commandId} doesn't exist in the database.");
-                return NotFound();
-            }
-            var playerForCommand = await _repository.Player.GetPlayerAsync(commandId, id, trackChanges: false);
+            var playerForCommand = HttpContext.Items["player"] as Player;
             if (playerForCommand == null)
             {
                 _logger.LogInfo($"Command with id: {id} doesn't exist in the database.");
@@ -107,36 +108,18 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        [ServiceFilter(typeof(ValidatePlayerForCommandExistsAttribute))]
         public async Task<IActionResult> UpdatePlayerForCommand(Guid commandId, Guid id, [FromBody] PlayerForUpdateDto player)
         {
-            if (player == null)
-            {
-                _logger.LogError("PlayerForUpdateDto object sent from client is null.");
-                return BadRequest("PlayerForUpdateDto object is null");
-            }
-            if (!ModelState.IsValid)
-            {
-                _logger.LogError("Invalid model state for the EmployeeForUpdateDto object");
-                return UnprocessableEntity(ModelState);
-            }
-            var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
-            if (command == null)
-            {
-                _logger.LogInfo($"Command with id: {commandId} doesn't exist in the database.");
-                return NotFound();
-            }
-            var playerEntity = await _repository.Player.GetPlayerAsync(commandId, id, trackChanges: true);
-            if (playerEntity == null)
-            {
-                _logger.LogInfo($"Player with id: {id} doesn't exist in the database.");
-                return NotFound();
-            }
+            var playerEntity = HttpContext.Items["player"] as Player;
             _mapper.Map(player, playerEntity);
             await _repository.SaveAsync();
             return NoContent();
         }
 
         [HttpPatch("{id}")]
+        [ServiceFilter(typeof(ValidatePlayerForCommandExistsAttribute))]
         public async Task<IActionResult> PartiallyUpdatePlayerForCommand(Guid commandId, Guid id, [FromBody] JsonPatchDocument<PlayerForUpdateDto> patchDoc)
         {
             if (patchDoc == null)
@@ -144,18 +127,7 @@ namespace WebApi.Controllers
                 _logger.LogError("patchDoc object sent from client is null.");
                 return BadRequest("patchDoc object is null");
             }
-            var command = await _repository.Command.GetCommandAsync(commandId, trackChanges: false);
-            if (command == null)
-            {
-                _logger.LogInfo($"Command with id: {commandId} doesn't exist in the database.");
-                return NotFound();
-            }
-            var playerEntity = await _repository.Player.GetPlayerAsync(commandId, id, trackChanges: true);
-            if (playerEntity == null)
-            {
-                _logger.LogInfo($"Player with id: {id} doesn't exist in the database.");
-                return NotFound();
-            }
+            var playerEntity = HttpContext.Items["player"] as Player;
             var playerToPatch = _mapper.Map<PlayerForUpdateDto>(playerEntity);
             patchDoc.ApplyTo(playerToPatch);
             TryValidateModel(playerToPatch);
