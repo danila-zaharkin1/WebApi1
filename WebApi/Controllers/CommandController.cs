@@ -9,6 +9,7 @@ using WebApi.ModelBinders;
 
 namespace WebApi.Controllers
 {
+    [ApiVersion("1.0")]
     [Route("api/commands")]
     [ApiController]
     public class CommandController : ControllerBase

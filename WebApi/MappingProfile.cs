@@ -22,7 +22,7 @@ namespace WebApi
             CreateMap<CompanyForUpdateDto, Company>();
             CreateMap<EmployeeForUpdateDto, Employee>().ReverseMap();
             CreateMap<PlayerForUpdateDto, Player>().ReverseMap();
-
+            CreateMap<UserForRegistrationDto, User>();
         }
     }
 }

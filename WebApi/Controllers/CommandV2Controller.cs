@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers
 {
+    [ApiVersion("2.0")]
     [Route("api/[controller]")]
     [ApiController]
     public class CommandV2Controller : ControllerBase

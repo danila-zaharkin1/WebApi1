@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers
 {
-    [ApiVersion("2.0)")]
+    [ApiVersion("2.0")]
     [Route("api/[controller]")]
     [ApiController]
     public class CompaniesV2Controller : ControllerBase

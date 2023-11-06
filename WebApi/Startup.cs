@@ -45,6 +45,9 @@ public class Startup
         services.AddScoped<ValidateEmployeeForCompanyExistsAttribute>();
         services.AddScoped<ValidatePlayerForCommandExistsAttribute>();
         services.ConfigureVersioning();
+        services.AddAuthentication();
+        services.ConfigureIdentity();
+        services.ConfigureJWT(Configuration);
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
     }
@@ -68,7 +71,7 @@ public class Startup
         });
 
         app.UseRouting();
-
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.UseEndpoints(endpoints =>
