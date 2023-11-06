@@ -44,6 +44,7 @@ public class Startup
         services.AddScoped<ValidateCommandExistsAttribute>();
         services.AddScoped<ValidateEmployeeForCompanyExistsAttribute>();
         services.AddScoped<ValidatePlayerForCommandExistsAttribute>();
+        services.ConfigureVersioning();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
     }

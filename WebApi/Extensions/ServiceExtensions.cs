@@ -1,8 +1,11 @@
 ﻿using Contracts;
 using Entities;
 using LoggerService;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Repository;
+using WebApi.Controllers;
 using WebApi.OutputFormatters;
 
 namespace WebApi.Extensions
@@ -27,5 +30,20 @@ namespace WebApi.Extensions
             b.MigrationsAssembly("WebApi")));
         public static void ConfigureRepositoryManager(this IServiceCollection services) =>  services.AddScoped<IRepositoryManager, RepositoryManager>();
         public static IMvcBuilder AddCustomCSVFormatter(this IMvcBuilder builder) => builder.AddMvcOptions(config => config.OutputFormatters.Add(new CsvOutputFormatter()));
+        public static void ConfigureVersioning(this IServiceCollection services)
+        {
+            services.AddApiVersioning(opt =>
+            {
+                opt.ReportApiVersions = true;
+                opt.AssumeDefaultVersionWhenUnspecified = true;
+                opt.DefaultApiVersion = new ApiVersion(1, 0);
+                opt.ApiVersionReader = new HeaderApiVersionReader("api-version");
+                opt.Conventions.Controller<CompaniesController>().HasApiVersion(new ApiVersion(1, 0));
+                opt.Conventions.Controller<CompaniesV2Controller>().HasDeprecatedApiVersion(new ApiVersion(2, 0));
+                opt.Conventions.Controller<CommandController>().HasDeprecatedApiVersion(new ApiVersion(1, 0));
+                opt.Conventions.Controller<CommandV2Controller>().HasDeprecatedApiVersion(new ApiVersion(2, 0));
+            });
+        }
+
     }
 }

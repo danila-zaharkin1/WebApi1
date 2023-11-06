@@ -29,6 +29,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
+        [HttpHead]
         public async Task<IActionResult> GetPlayersForCommand(Guid commandId, [FromQuery] PlayerParameters playerParameters)
         {
             if (!playerParameters.ValidAgeRange)
