@@ -12,6 +12,7 @@ namespace WebApi.Controllers
     [ApiVersion("1.0")]
     [Route("api/commands")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "v1")]
     public class CommandController : ControllerBase
     {
         private readonly IRepositoryManager _repository;
@@ -25,6 +26,10 @@ namespace WebApi.Controllers
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Получает список всех команд
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> GetCommands()
         {
@@ -33,6 +38,11 @@ namespace WebApi.Controllers
             return Ok(commandsDto);
         }
 
+        /// <summary>
+        /// Получает команду по Id
+        /// </summary>
+        /// <param name="id">Id команды</param>
+        /// <returns></returns>
         [HttpGet("{id}", Name = "CommandById")]
         public async Task<IActionResult> GetCommand(Guid id)
         {
@@ -49,9 +59,14 @@ namespace WebApi.Controllers
             }
         }
 
+        /// <summary>
+        /// Создает новую команду
+        /// </summary>
+        /// <param name="command">Модель новой команды</param>
+        /// <returns></returns>
         [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
-        public async Task<IActionResult> CreateCompany([FromBody] CommandForCreationDto command)
+        public async Task<IActionResult> CreateCommand([FromBody] CommandForCreationDto command)
         {         
             var commandEntity = _mapper.Map<Command>(command);
             _repository.Command.CreateCommand(commandEntity);
@@ -61,6 +76,11 @@ namespace WebApi.Controllers
             commandToReturn);
         }
 
+        /// <summary>
+        /// Получает несколько комманд по их Id
+        /// </summary>
+        /// <param name="ids">Id комманд которые хотим получить</param>
+        /// <returns></returns>
         [HttpGet("collection/({ids})", Name = "CommandCollection")]
         public async Task<IActionResult> GetCommandCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> ids)
         {
@@ -79,6 +99,11 @@ namespace WebApi.Controllers
             return Ok(commandsToReturn);
         }
 
+        /// <summary>
+        /// Создает коллекцию комманд
+        /// </summary>
+        /// <param name="commmandCollection">Модель коллекции комманд</param>
+        /// <returns></returns>
         [HttpPost("collection")]
         public async Task<IActionResult> CreateCommandCollection([FromBody] IEnumerable<CommandForCreationDto> commmandCollection)
         {
@@ -99,6 +124,11 @@ namespace WebApi.Controllers
             commandCollectionToReturn);
         }
 
+        /// <summary>
+        /// Удаляет команду по Id
+        /// </summary>
+        /// <param name="id">Id команды</param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCommand(Guid id)
         {
@@ -113,6 +143,12 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Редактирует комманду по Id
+        /// </summary>
+        /// <param name="id">Id команды</param>
+        /// <param name="command">Модель отредактированной команды</param>
+        /// <returns></returns>
         [HttpPut("{id}")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> UpdateCommand(Guid id, [FromBody] CommandForUpdateDto command)

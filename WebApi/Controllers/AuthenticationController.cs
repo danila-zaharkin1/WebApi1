@@ -11,6 +11,8 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "v1")]
+
     public class AuthenticationController : ControllerBase
     {
         private readonly ILoggerManager _logger;

@@ -7,6 +7,7 @@ namespace WebApi.Controllers
     [ApiVersion("2.0")]
     [Route("api/[controller]")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "v2")]
     public class CompaniesV2Controller : ControllerBase
     {
         private readonly IRepositoryManager _repository;

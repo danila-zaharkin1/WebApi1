@@ -12,6 +12,7 @@ namespace WebApi.Controllers
     [ApiVersion("1.0")]
     [Route("api/companies")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "v1")]
     public class CompaniesController : ControllerBase
     {
         private readonly IRepositoryManager _repository;
@@ -24,6 +25,11 @@ namespace WebApi.Controllers
             _logger = logger;
             _mapper = mapper;
         }
+
+        /// <summary>
+        /// Получает список всех компаний
+        /// </summary>
+        /// <returns></returns>
         [HttpGet(Name = "GetCompanies"), Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetCompanies()
         {
@@ -32,6 +38,11 @@ namespace WebApi.Controllers
             return Ok(companiesDto);
         }
 
+        /// <summary>
+        /// Получает компанию по Id
+        /// </summary>
+        /// <param name="id">Id команды</param>
+        /// <returns></returns>
         [HttpGet("{id}", Name = "CompanyById")]
         public async Task<IActionResult> GetCompany(Guid id)
         {
@@ -48,6 +59,11 @@ namespace WebApi.Controllers
             }
         }
 
+        /// <summary>
+        /// Создает новую компанию
+        /// </summary>
+        /// <param name="company">Модель новой компании</param>
+        /// <returns></returns>
         [HttpPost]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> CreateCompany([FromBody] CompanyForCreationDto company)
@@ -70,6 +86,11 @@ namespace WebApi.Controllers
             companyToReturn);
         }
 
+        /// <summary>
+        /// Получает список компаний по их Id
+        /// </summary>
+        /// <param name="ids">Id компаний которые хотим получить</param>
+        /// <returns></returns>
         [HttpGet("collection/({ids})", Name = "CompanyCollection")]
         public async Task<IActionResult> GetCompanyCollection(IEnumerable<Guid> ids)
         {
@@ -89,6 +110,11 @@ namespace WebApi.Controllers
             return Ok(companiesToReturn);
         }
 
+        /// <summary>
+        /// Создает коллекцию компаний
+        /// </summary>
+        /// <param name="companyCollection">Модель коллекции компаний</param>
+        /// <returns></returns>
         [HttpPost("collection")]
         public async Task<IActionResult> CreateCompanyCollection([FromBody] IEnumerable<CompanyForCreationDto> companyCollection)
         {
@@ -109,6 +135,11 @@ namespace WebApi.Controllers
             companyCollectionToReturn);
         }
 
+        /// <summary>
+        /// Удаляет нкомпанию по Id
+        /// </summary>
+        /// <param name="id">Id компании</param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         [ServiceFilter(typeof(ValidateCompanyExistsAttribute))]
         public async Task<IActionResult> DeleteCompany(Guid id)
@@ -124,6 +155,12 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Редактирует компанию
+        /// </summary>
+        /// <param name="id">Id компании</param>
+        /// <param name="company">Модель отредактированной компании</param>
+        /// <returns></returns>
         [HttpPut("{id}")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
         [ServiceFilter(typeof(ValidateCompanyExistsAttribute))]

@@ -13,6 +13,8 @@ namespace WebApi.Controllers
 {
     [Route("api/commands/{commandId}/players")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "v1")]
+
     public class PlayersController : ControllerBase
     {
         private readonly IRepositoryManager _repository;
@@ -28,6 +30,12 @@ namespace WebApi.Controllers
             _dataShaper = dataShaper;
         }
 
+        /// <summary>
+        /// Получает список игроков определенной команды
+        /// </summary>
+        /// <param name="commandId">Id команды</param>
+        /// <param name="playerParameters">Параметры запроса</param>
+        /// <returns></returns>
         [HttpGet]
         [HttpHead]
         public async Task<IActionResult> GetPlayersForCommand(Guid commandId, [FromQuery] PlayerParameters playerParameters)
@@ -46,6 +54,12 @@ namespace WebApi.Controllers
             return Ok(_dataShaper.ShapeData(playersDto, playerParameters.Fields));
         }
 
+        /// <summary>
+        /// Получает определенного игрока определенной команды
+        /// </summary>
+        /// <param name="commandId">Id команды</param>
+        /// <param name="id">Id игрока</param>
+        /// <returns></returns>
         [HttpGet("{id}", Name = "GetPlayerForCommand")]
         public async Task<IActionResult> GetPlayerForCommand(Guid commandId, Guid id)
         {
@@ -65,6 +79,12 @@ namespace WebApi.Controllers
             return Ok(player);
         }
 
+        /// <summary>
+        /// Добавляет нового игрока в команду
+        /// </summary>
+        /// <param name="commandId">Id команды</param>
+        /// <param name="player">Модель нового игрока</param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> CreatePlayerForCommand(Guid commandId, [FromBody] PlayerForCreationDto player)
         {
@@ -95,6 +115,12 @@ namespace WebApi.Controllers
             }, playerToReturn);
         }
 
+        /// <summary>
+        /// Удаляет определенного игрока команды
+        /// </summary>
+        /// <param name="commandId">Id команды</param>
+        /// <param name="id">Id игрока</param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         [ServiceFilter(typeof(ValidatePlayerForCommandExistsAttribute))]
         public async Task<IActionResult> DeletePlayerForCommand(Guid commandId, Guid id)
@@ -110,6 +136,13 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Редактирует игрока
+        /// </summary>
+        /// <param name="commandId">Id команды</param>
+        /// <param name="id">Id игрока</param>
+        /// <param name="player">Отредактированнная модель игрока</param>
+        /// <returns></returns>
         [HttpPut("{id}")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
         [ServiceFilter(typeof(ValidatePlayerForCommandExistsAttribute))]
@@ -121,6 +154,13 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Редактирует игрока
+        /// </summary>
+        /// <param name="commandId">Id команды</param>
+        /// <param name="id">Id игрока</param>
+        /// <param name="patchDoc">Параметры patch запроса</param>
+        /// <returns></returns>
         [HttpPatch("{id}")]
         [ServiceFilter(typeof(ValidatePlayerForCommandExistsAttribute))]
         public async Task<IActionResult> PartiallyUpdatePlayerForCommand(Guid commandId, Guid id, [FromBody] JsonPatchDocument<PlayerForUpdateDto> patchDoc)
