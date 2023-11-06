@@ -18,12 +18,14 @@ namespace WebApi.Controllers
         private readonly IRepositoryManager _repository;
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
+        private readonly IDataShaper<PlayerDto> _dataShaper;
 
-        public PlayersController(IRepositoryManager repository, ILoggerManager logger, IMapper mapper)
+        public PlayersController(IRepositoryManager repository, ILoggerManager logger, IMapper mapper, IDataShaper<PlayerDto> dataShaper)
         {
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
+            _dataShaper = dataShaper;
         }
 
         [HttpGet]
@@ -40,7 +42,7 @@ namespace WebApi.Controllers
             var playersFromDb = await _repository.Player.GetPlayersAsync(commandId, playerParameters, trackChanges: false);
             Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(playersFromDb.MetaData));
             var playersDto = _mapper.Map<IEnumerable<PlayerDto>>(playersFromDb);
-            return Ok(playersDto);
+            return Ok(_dataShaper.ShapeData(playersDto, playerParameters.Fields));
         }
 
         [HttpGet("{id}", Name = "GetPlayerForCommand")]
